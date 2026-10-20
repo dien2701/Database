@@ -1,0 +1,239 @@
+DROP DATABASE IF EXISTS assigment_01;
+CREATE DATABASE IF NOT EXISTS assigment_01;
+USE assigment_01;
+
+-- Tắt kiểm tra khóa ngoại để DROP theo bất kỳ thứ tự nào
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Table 1: Department
+DROP TABLE IF EXISTS Department;
+CREATE TABLE Department (
+    department_id   TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    department_name NVARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Table 2: Position
+DROP TABLE IF EXISTS `Position`;
+CREATE TABLE `Position` (
+    position_id     TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    position_name   ENUM('Dev', 'Test', 'Scrum Master', 'PM') NOT NULL UNIQUE
+);
+
+-- Table 3: Account
+DROP TABLE IF EXISTS `Account`;
+CREATE TABLE `Account` (
+    account_id      INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email           VARCHAR(100) NOT NULL UNIQUE,
+    username        VARCHAR(50)  NOT NULL UNIQUE,
+    full_name       NVARCHAR(100) NOT NULL,
+    department_id   TINYINT UNSIGNED NOT NULL,
+    position_id     TINYINT UNSIGNED NOT NULL,
+    create_date     DATE DEFAULT (CURRENT_DATE),
+    FOREIGN KEY (department_id) REFERENCES Department(department_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (position_id)   REFERENCES `Position`(position_id)   ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- Table 4: Group
+DROP TABLE IF EXISTS `Group`;
+CREATE TABLE `Group` (
+    group_id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    group_name      NVARCHAR(50) NOT NULL UNIQUE,
+    creator_id      INT UNSIGNED,
+    create_date     DATE DEFAULT (CURRENT_DATE),
+    FOREIGN KEY (creator_id) REFERENCES `Account`(account_id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- Table 5: GroupAccount
+DROP TABLE IF EXISTS GroupAccount;
+CREATE TABLE GroupAccount (
+    group_id        INT UNSIGNED NOT NULL,
+    account_id      INT UNSIGNED NOT NULL,
+    join_date       DATE DEFAULT (CURRENT_DATE),
+    PRIMARY KEY (group_id, account_id),
+    FOREIGN KEY (group_id)   REFERENCES `Group`(group_id)     ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (account_id) REFERENCES `Account`(account_id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- Table 6: TypeQuestion
+DROP TABLE IF EXISTS TypeQuestion;
+CREATE TABLE TypeQuestion (
+    type_id         TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    type_name       ENUM('Essay', 'Multiple-Choice') NOT NULL UNIQUE
+);
+
+-- Table 7: CategoryQuestion
+DROP TABLE IF EXISTS CategoryQuestion;
+CREATE TABLE CategoryQuestion (
+    category_id     TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    category_name   NVARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Table 8: Question
+DROP TABLE IF EXISTS Question;
+CREATE TABLE Question (
+    question_id     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    content         NVARCHAR(500) NOT NULL,
+    category_id     TINYINT UNSIGNED NOT NULL,
+    type_id         TINYINT UNSIGNED NOT NULL,
+    creator_id      INT UNSIGNED,
+    create_date     DATE DEFAULT (CURRENT_DATE),
+    FOREIGN KEY (category_id) REFERENCES CategoryQuestion(category_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (type_id)     REFERENCES TypeQuestion(type_id)         ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (creator_id)  REFERENCES `Account`(account_id)         ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- Table 9: Answer
+DROP TABLE IF EXISTS Answer;
+CREATE TABLE Answer (
+    answer_id       INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    content         NVARCHAR(500) NOT NULL,
+    question_id     INT UNSIGNED NOT NULL,
+    is_correct      BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (question_id) REFERENCES Question(question_id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- Table 10: Exam
+DROP TABLE IF EXISTS Exam;
+CREATE TABLE Exam (
+    exam_id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `code`          VARCHAR(20) NOT NULL UNIQUE,
+    title           NVARCHAR(100) NOT NULL,
+    category_id     TINYINT UNSIGNED NOT NULL,
+    duration        TINYINT UNSIGNED NOT NULL,   -- phút
+    creator_id      INT UNSIGNED,
+    create_date     DATE DEFAULT (CURRENT_DATE),
+    FOREIGN KEY (category_id) REFERENCES CategoryQuestion(category_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (creator_id)  REFERENCES `Account`(account_id)         ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- Table 11: ExamQuestion
+DROP TABLE IF EXISTS ExamQuestion;
+CREATE TABLE ExamQuestion (
+    exam_id         INT UNSIGNED NOT NULL,
+    question_id     INT UNSIGNED NOT NULL,
+    PRIMARY KEY (exam_id, question_id),
+    FOREIGN KEY (exam_id)     REFERENCES Exam(exam_id)         ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (question_id) REFERENCES Question(question_id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ===================== INSERT DATA =====================
+
+INSERT INTO Department (department_name)
+VALUES                 ('Sale'),
+                       ('Marketing'),
+                       ('IT'),
+                       ('HR'),
+                       ('Finance'),
+                       ('Accounting'),
+                       ('Legal'),
+                       ('Admin'),
+                       ('R&D'),
+                       ('Customer Service');
+
+INSERT INTO `Position` (position_name)
+VALUES                 ('Dev'),
+                       ('Test'),
+                       ('Scrum Master'),
+                       ('PM');
+
+INSERT INTO `Account` (email                 , username   , full_name           , department_id , position_id , create_date)
+VALUES                ('an.nguyen@gmail.com' , 'annguyen' , N'Nguyễn Văn An'    , 3             , 1           , '2024-01-05'),
+                      ('binh.tran@gmail.com' , 'binhtran' , N'Trần Thị Bình'    , 3             , 2           , '2024-01-10'),
+                      ('cuong.le@gmail.com'  , 'cuongle'  , N'Lê Văn Cường'     , 3             , 3           , '2024-02-01'),
+                      ('dung.pham@gmail.com' , 'dungpham' , N'Phạm Thị Dung'    , 1             , 4           , '2024-02-15'),
+                      ('em.hoang@gmail.com'  , 'emhoang'  , N'Hoàng Văn Em'     , 2             , 1           , '2024-03-01'),
+                      ('giang.vu@gmail.com'  , 'giangvu'  , N'Vũ Thị Giang'     , 9             , 2           , '2024-03-12'),
+                      ('hai.dang@gmail.com'  , 'haidang'  , N'Đặng Văn Hải'     , 3             , 1           , '2024-04-02'),
+                      ('khanh.bui@gmail.com' , 'khanhbui' , N'Bùi Thị Khánh'    , 3             , 3           , '2024-04-20'),
+                      ('long.do@gmail.com'   , 'longdo'   , N'Đỗ Văn Long'      , 9             , 2           , '2024-05-05'),
+                      ('mai.ngo@gmail.com'   , 'maingo'   , N'Ngô Thị Mai'      , 4             , 4           , '2024-05-18');
+
+INSERT INTO `Group` (group_name     , creator_id , create_date)
+VALUES              ('Java Fresher' , 1          , '2024-06-01'),
+                    ('Testing Team' , 2          , '2024-06-05'),
+                    ('Scrum Team A' , 3          , '2024-06-10'),
+                    ('PM Club'      , 4          , '2024-06-15'),
+                    ('BA Group'     , 5          , '2024-06-20'),
+                    ('Design Team'  , 6          , '2024-07-01'),
+                    ('DevOps Team'  , 7          , '2024-07-05'),
+                    ('Tech Leads'   , 8          , '2024-07-10'),
+                    ('Data Team'    , 9          , '2024-07-15'),
+                    ('QA Group'     , 10         , '2024-07-20');
+
+INSERT INTO GroupAccount (group_id , account_id , join_date)
+VALUES                   (1        , 1          , '2024-06-02'),
+                         (1        , 2          , '2024-06-03'),
+                         (1        , 3          , '2024-06-04'),
+                         (2        , 4          , '2024-06-06'),
+                         (2        , 5          , '2024-06-07'),
+                         (3        , 6          , '2024-06-11'),
+                         (4        , 7          , '2024-06-16'),
+                         (5        , 8          , '2024-06-21'),
+                         (6        , 9          , '2024-07-02'),
+                         (7        , 10         , '2024-07-06');
+
+INSERT INTO TypeQuestion (type_name)
+VALUES                   ('Essay'),
+                         ('Multiple-Choice');
+
+INSERT INTO CategoryQuestion (category_name)
+VALUES                       ('Java'),
+                             ('.NET'),
+                             ('SQL'),
+                             ('Postman'),
+                             ('Ruby'),
+                             ('Python'),
+                             ('C++'),
+                             ('JavaScript'),
+                             ('PHP'),
+                             ('Git');
+
+INSERT INTO Question (content                                           , category_id , type_id , creator_id , create_date)
+VALUES               (N'Java là ngôn ngữ gì?'                           , 1           , 1       , 1          , '2024-08-01'),
+                     (N'.NET Core chạy được trên Linux không?'          , 2           , 2       , 2          , '2024-08-02'),
+                     (N'Câu lệnh nào dùng để lấy dữ liệu trong SQL?'    , 3           , 2       , 3          , '2024-08-03'),
+                     (N'Postman dùng để làm gì?'                        , 4           , 1       , 4          , '2024-08-04'),
+                     (N'Ruby on Rails là gì?'                           , 5           , 1       , 5          , '2024-08-05'),
+                     (N'Python có phải ngôn ngữ thông dịch không?'      , 6           , 2       , 6          , '2024-08-06'),
+                     (N'Con trỏ trong C++ là gì?'                       , 7           , 1       , 7          , '2024-08-07'),
+                     (N'Từ khóa nào khai báo hằng trong JavaScript?'    , 8           , 2       , 8          , '2024-08-08'),
+                     (N'PHP viết tắt của từ gì?'                        , 9           , 1       , 9          , '2024-08-09'),
+                     (N'Lệnh nào dùng để tạo nhánh mới trong Git?'      , 10          , 2       , 10         , '2024-08-10');
+
+INSERT INTO Answer (content                                , question_id , is_correct)
+VALUES             (N'Ngôn ngữ lập trình hướng đối tượng'  , 1           , TRUE),
+                   (N'Có'                                  , 2           , TRUE),
+                   (N'SELECT'                              , 3           , TRUE),
+                   (N'DELETE'                              , 3           , FALSE),
+                   (N'Kiểm thử API'                        , 4           , TRUE),
+                   (N'Framework web viết bằng Ruby'        , 5           , TRUE),
+                   (N'Đúng'                                , 6           , TRUE),
+                   (N'const'                               , 8           , TRUE),
+                   (N'PHP: Hypertext Preprocessor'         , 9           , TRUE),
+                   (N'git branch'                          , 10          , TRUE);
+
+INSERT INTO Exam (`code`   , title                      , category_id , duration , creator_id , create_date)
+VALUES           ('EX001'  , N'Đề thi Java cơ bản'      , 1           , 60       , 1          , '2024-09-01'),
+                 ('EX002'  , N'Đề thi .NET'             , 2           , 90       , 2          , '2024-09-02'),
+                 ('EX003'  , N'Đề thi SQL'              , 3           , 60       , 3          , '2024-09-03'),
+                 ('EX004'  , N'Đề thi Postman'          , 4           , 45       , 4          , '2024-09-04'),
+                 ('EX005'  , N'Đề thi Ruby'             , 5           , 60       , 5          , '2024-09-05'),
+                 ('EX006'  , N'Đề thi Python'           , 6           , 120      , 6          , '2024-09-06'),
+                 ('EX007'  , N'Đề thi C++'              , 7           , 90       , 7          , '2024-09-07'),
+                 ('EX008'  , N'Đề thi JavaScript'       , 8           , 60       , 8          , '2024-09-08'),
+                 ('EX009'  , N'Đề thi PHP'              , 9           , 45       , 9          , '2024-09-09'),
+                 ('EX010'  , N'Đề thi Git'              , 10          , 30       , 10         , '2024-09-10');
+
+INSERT INTO ExamQuestion (exam_id , question_id)
+VALUES                   (1       , 1),
+                         (2       , 2),
+                         (3       , 3),
+                         (4       , 4),
+                         (5       , 5),
+                         (6       , 6),
+                         (7       , 7),
+                         (8       , 8),
+                         (9       , 9),
+                         (10      , 10);
