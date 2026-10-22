@@ -297,7 +297,20 @@ FROM account
 WHERE SUBSTRING_INDEX(full_name,' ', -1) LIKE "B%H";
 
 -- Question 12: Xóa tất cả các exam được tạo trước ngày 20/12/2019
+DELETE FROM exam
+WHERE create_date < '2024-09-04';
+
 -- Question 13: Xóa tất cả các question có nội dung bắt đầu bằng từ "câu hỏi"
+DELETE FROM question
+WHERE content LIKE "câu lệnh%";
+
 -- Question 14: Update thông tin của account có id = 5 thành tên "Nguyễn Bá Lộc" và
 -- email thành loc.nguyenba@vti.com.vn
+UPDATE account
+SET full_name="Nguyễn Bá Lộc", email="loc.nguyenba@vti.com.vn"
+WHERE  account_id = 5;
+
 -- Question 15: update account có id = 5 sẽ thuộc group có id = 4
+UPDATE group_account
+SET group_id = 4
+WHERE account_id = 5;
